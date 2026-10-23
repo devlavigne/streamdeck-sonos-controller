@@ -4,6 +4,8 @@
         "Toggle Play/Pause with cover art and title animation.": "Schaltet zwischen Wiedergabe und Pause um, mit Albumcover und Titelanimation.",
         "Play Favorite": "Favorit abspielen",
         "Plays a selected SONOS favorite.": "Spielt einen ausgewählten SONOS-Favoriten ab.",
+        "Group Speakers": "Lautsprecher gruppieren",
+        "Groups SONOS speakers so they play in sync; press again to split them.": "Gruppiert SONOS-Lautsprecher, damit sie synchron spielen; erneut drücken trennt sie.",
         "Playback Control": "Wiedergabe-Steuerung",
         "Provides playback controls like next, previous, etc.": "Bietet Wiedergabe-Steuerung: weiter, zurück u. v. m.",
         "Volume Control": "Lautstärke-Taste",
@@ -94,6 +96,10 @@
             "panorama_color_none": "Gerade bietet kein Plugin eine Coverfarbe an; bis dahin nimmt der Effekt seine eigene Farbe."
         },
         "pi": {
+            "group_leader": "Führender Lautsprecher",
+            "group_leader_hint": "Die Gruppe spielt, was dieser Lautsprecher spielt. Nach dem Gruppieren die Musik hier starten (Favoriten, Favorit abspielen).",
+            "group_members": "Lautsprecher, die beitreten",
+            "group_members_hint": "Taste drücken: Diese Lautsprecher treten dem führenden synchron bei; erneut drücken trennt sie wieder. Der führende spielt weiter.",
             "sonos_device": "SONOS-Gerät",
             "device_any": "Gerät",
             "choose_device": "Gerät wählen",

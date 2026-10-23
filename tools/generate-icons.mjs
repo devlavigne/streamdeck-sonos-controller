@@ -3,7 +3,7 @@ import {
     mdiPlayCircle, mdiStarCircle, mdiPlaylistPlay,
     mdiVolumeHigh, mdiVolumeOff, mdiKnob, mdiHeartCircle,
     mdiCreation, mdiMusicCircle, mdiAccessPointNetwork,
-    mdiPlaylistMusic, mdiHexagonMultiple,
+    mdiPlaylistMusic, mdiHexagonMultiple, mdiSpeakerMultiple,
 } from '@mdi/js';
 import fs from 'fs';
 import path from 'path';
@@ -38,5 +38,6 @@ await write(mdiMusicCircle,  `${IMGS}/actions/track-control-dial`,       'icon')
 await write(mdiAccessPointNetwork, `${IMGS}/actions/diagnostics-dial`, 'icon');
 await write(mdiPlaylistMusic, `${IMGS}/actions/queue-dial`,       'icon');
 await write(mdiHexagonMultiple, `${IMGS}/actions/multi-control-key`, 'icon');
+await write(mdiSpeakerMultiple, `${IMGS}/actions/group-speakers-key`, 'icon');
 
 console.log('Done.');

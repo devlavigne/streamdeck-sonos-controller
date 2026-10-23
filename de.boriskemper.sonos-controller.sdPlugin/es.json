@@ -4,6 +4,8 @@
         "Toggle Play/Pause with cover art and title animation.": "Alterna reproducción/pausa, con portada y animación de título.",
         "Play Favorite": "Reproducir favorito",
         "Plays a selected SONOS favorite.": "Reproduce un favorito de SONOS seleccionado.",
+        "Group Speakers": "Agrupar altavoces",
+        "Groups SONOS speakers so they play in sync; press again to split them.": "Agrupa altavoces SONOS para que suenen sincronizados; pulsa de nuevo para separarlos.",
         "Playback Control": "Control de reproducción",
         "Provides playback controls like next, previous, etc.": "Controles de reproducción: siguiente, anterior, etc.",
         "Volume Control": "Control de volumen",
@@ -94,6 +96,10 @@
             "panorama_color_none": "Ahora ningún plugin ofrece un color de portada; hasta entonces el efecto usa su propio color."
         },
         "pi": {
+            "group_leader": "Altavoz principal",
+            "group_leader_hint": "El grupo reproduce lo que suena en este altavoz. Inicia la música aquí (Favoritos, Reproducir favorito) después de agrupar.",
+            "group_members": "Altavoces que se unen",
+            "group_members_hint": "Pulsa la tecla para unirlos al altavoz principal en sincronía; pulsa de nuevo para separarlos. El principal sigue sonando.",
             "sonos_device": "Dispositivo SONOS",
             "device_any": "Dispositivo",
             "choose_device": "Elegir dispositivo",

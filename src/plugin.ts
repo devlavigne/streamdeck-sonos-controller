@@ -18,6 +18,7 @@ import { GroupVolumeDial } from "./actions/group-volume-dial";
 import { DiagnosticsDial } from "./actions/diagnostics-dial";
 import { QueueDial } from "./actions/queue-dial";
 import { MultiControlKey } from "./actions/multi-control-key";
+import { GroupSpeakersKey } from "./actions/group-speakers-key";
 import { registerGracefulShutdown } from "./utils/graceful-shutdown";
 import { initPiBridge } from "./pi/bridge";
 import { startSocBus } from "./bus/soc-bus";
@@ -42,6 +43,7 @@ streamDeck.actions.registerAction(new GroupVolumeDial());
 streamDeck.actions.registerAction(new DiagnosticsDial());
 streamDeck.actions.registerAction(new QueueDial());
 streamDeck.actions.registerAction(new MultiControlKey());
+streamDeck.actions.registerAction(new GroupSpeakersKey());
 
 // Finally, connect to the Stream Deck immediately.
 streamDeck.connect();

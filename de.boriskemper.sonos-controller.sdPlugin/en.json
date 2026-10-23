@@ -4,6 +4,8 @@
         "Toggle Play/Pause with cover art and title animation.": "Toggle Play/Pause with cover art and title animation.",
         "Play Favorite": "Play Favorite",
         "Plays a selected SONOS favorite.": "Plays a selected SONOS favorite.",
+        "Group Speakers": "Group Speakers",
+        "Groups SONOS speakers so they play in sync; press again to split them.": "Groups SONOS speakers so they play in sync; press again to split them.",
         "Playback Control": "Playback Control",
         "Provides playback controls like next, previous, etc.": "Provides playback controls like next, previous, etc.",
         "Volume Control": "Volume Control",
@@ -95,6 +97,10 @@
             "panorama_color_none": "No plugin offers a cover colour right now; the effect uses its own colour until one does."
         },
         "pi": {
+            "group_leader": "Lead speaker",
+            "group_leader_hint": "The group plays what this speaker plays. Start music here (Favorites, Play Favorite) after grouping.",
+            "group_members": "Speakers that join",
+            "group_members_hint": "Press the key to join these to the lead speaker in sync; press again to split them off. The lead speaker keeps playing.",
             "sonos_device": "Sonos device",
             "device_any": "Device",
             "choose_device": "Choose a speaker",

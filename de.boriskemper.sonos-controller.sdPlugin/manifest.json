@@ -84,6 +84,22 @@
 			]
 		},
 		{
+			"Name": "Group Speakers",
+			"UUID": "de.boriskemper.sonos-controller.group-speakers-key",
+			"Icon": "imgs/actions/group-speakers-key/icon",
+			"Tooltip": "Groups SONOS speakers so they play in sync; press again to split them.",
+			"PropertyInspectorPath": "ui/group-speakers-key.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/group-speakers-key/icon",
+					"ShowTitle": false
+				}
+			]
+		},
+		{
 			"Name": "Volume",
 			"UUID": "de.boriskemper.sonos-controller.volume-dial",
 			"Icon": "imgs/actions/volume-dial/icon",
