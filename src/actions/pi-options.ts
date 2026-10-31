@@ -2,6 +2,7 @@
 // source="sonos-devices"/"sonos-groups">, served by src/pi/bridge.ts).
 
 import { safeDevices, discoveryPromise, isInvisibleSatellite } from "../sonos/sonos-discovery";
+import { groupLabel } from "../sonos/grouping";
 import { piT } from "../utils/pi-i18n";
 
 export type PiOptionItem = { label: string; value: string };
@@ -32,13 +33,9 @@ export async function groupItems(currentIp?: string): Promise<PiOptionItem[]> {
         // counts EVERY zone member, including a bonded stereo/HT pair's invisible satellite, so a
         // group containing one or more bonded rooms would otherwise show an inflated count (e.g.
         // "Herrenzimmer + 8" instead of "+6" for a 7-room group with 2 bonded pairs). Same fix as
-        // SonosGroupController.resolveCoordinator()'s dial-face group name.
-        const memberCount = known
-            .filter((m) => (m.Coordinator ?? m).Host === coordinator.Host)
-            .filter((m) => !isInvisibleSatellite(m.Host))
-            .length;
-        const label = memberCount > 1 ? `${coordinator.Name} + ${memberCount - 1}` : coordinator.Name;
-        items.push({ label, value: coordinator.Host });
+        // SonosGroupController.resolveCoordinator()'s dial-face group name; groupLabel also puts in a
+        // name the user gave that exact set of speakers ("Downstairs", see sonos/group-names.ts).
+        items.push({ label: groupLabel(coordinator.Host), value: coordinator.Host });
     }
     if (currentIp && !seen.has(currentIp)) {
         items.unshift({ label: `${currentIp} ${piT('(offline)')}`, value: currentIp });

@@ -1,6 +1,7 @@
 import streamDeck from "@elgato/streamdeck";
 import { SonosDevice, SonosEvents } from "@svrooij/sonos";
 import { safeDevices, discoveryPromise, isInvisibleSatellite } from "./sonos-discovery";
+import { nameOf, onGroupNamesChanged } from "./group-names";
 import { sonosDeviceManager } from "./SonosDeviceManager";
 import { SonosDeviceController } from "./SonosDeviceController";
 import { VolumeInfo } from "./SonosTypes";
@@ -78,6 +79,8 @@ export class SonosGroupController {
   private displayNameCallbacks: Map<string, (name: string) => void> = new Map();
 
   private topologyTimer?: NodeJS.Timeout;
+  // Re-resolves the display name when a group name is added, changed or removed
+  private stopNameWatch?: () => void;
   private isInitialized = false;
 
   // Fallback for isReachable while the anchor has never been resolved into memberControllers —
@@ -148,11 +151,14 @@ export class SonosGroupController {
     }
     await this.refreshMuteState();
     this.startTopologyWatch();
+    this.stopNameWatch = onGroupNamesChanged(() => { this.resolveCoordinator(); });
     this.isInitialized = true;
   }
 
   public destroy(): void {
     if (this.topologyTimer) clearInterval(this.topologyTimer);
+    this.stopNameWatch?.();
+    this.stopNameWatch = undefined;
     if (this.anchorDevice) {
       this.anchorDevice.Events.removeListener(SonosEvents.Coordinator, this.onAnchorTopologyEvent);
       this.anchorDevice.Events.removeListener(SonosEvents.GroupName, this.onAnchorTopologyEvent);
@@ -191,8 +197,11 @@ export class SonosGroupController {
     // ZoneGroupMember, including a bonded pair's invisible satellite, so a standalone
     // stereo-paired room would otherwise permanently show e.g. "Küche + 1" even when it isn't
     // actually grouped with anything else.
-    const memberCount = this.visibleGroupMemberHosts(coordinator.Host).length;
-    const newName = memberCount > 1 ? `${coordinator.Name} + ${memberCount - 1}` : coordinator.Name;
+    const memberHosts = this.visibleGroupMemberHosts(coordinator.Host);
+    const memberCount = memberHosts.length;
+    // A name the user gave exactly this set of speakers ("Downstairs") wins — see sonos/group-names.ts
+    const named = memberCount > 1 ? nameOf(safeDevices().filter(d => memberHosts.includes(d.Host)).map(d => d.Uuid)) : undefined;
+    const newName = named ?? (memberCount > 1 ? `${coordinator.Name} + ${memberCount - 1}` : coordinator.Name);
     if (newName !== this.groupName) {
       this.groupName = newName;
       this.notifyDisplayNameChanged();

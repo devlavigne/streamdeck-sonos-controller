@@ -10,6 +10,7 @@ import { piBridge } from "@rocklobster42195/streamdeck-kit/bridge";
 import { DeckBus } from "@rocklobster42195/streamdeck-kit/bus";
 import { panorama, panoramaRows, shareActionsTo, socActions, textRuns } from "../effects/panorama";
 import { isInvisibleSatellite, onDevicesChanged, safeDevices } from "../sonos/sonos-discovery";
+import { onGroupNamesChanged } from "../sonos/group-names";
 import { sonosDeviceManager } from "../sonos/SonosDeviceManager";
 
 // Before any speaker connection is watched: which speakers report a battery (Roam, Move)
@@ -56,6 +57,7 @@ export async function startSocBus(): Promise<void> {
     // Group names like "Küche + 2", again whenever speakers join or leave groups
     const countMembers = () => setGroupMembers((id) => safeDevices().filter((d) => !isInvisibleSatellite(d.Host) && (d.Coordinator?.Uuid || d.Coordinator?.Host) === id).map((d) => d.Uuid || d.Host));
     onDevicesChanged(countMembers);
+    onGroupNamesChanged(countMembers);
     countMembers();
     // Every group on deckbus, not only the speakers SO-C's own actions have open: the universal
     // keys (any plugin's) follow the active speaker and stopped ones too (seen 2026-10-09: a radio

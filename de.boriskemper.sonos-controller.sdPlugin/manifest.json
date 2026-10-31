@@ -100,6 +100,22 @@
 			]
 		},
 		{
+			"Name": "Speaker in Group",
+			"UUID": "de.boriskemper.sonos-controller.speaker-in-group-key",
+			"Icon": "imgs/actions/speaker-in-group-key/icon",
+			"Tooltip": "Adds a SONOS speaker to a group or takes it out; lit while it plays in the group.",
+			"PropertyInspectorPath": "ui/speaker-in-group-key.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/speaker-in-group-key/icon",
+					"ShowTitle": false
+				}
+			]
+		},
+		{
 			"Name": "Volume",
 			"UUID": "de.boriskemper.sonos-controller.volume-dial",
 			"Icon": "imgs/actions/volume-dial/icon",

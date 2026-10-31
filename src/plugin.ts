@@ -19,6 +19,8 @@ import { DiagnosticsDial } from "./actions/diagnostics-dial";
 import { QueueDial } from "./actions/queue-dial";
 import { MultiControlKey } from "./actions/multi-control-key";
 import { GroupSpeakersKey } from "./actions/group-speakers-key";
+import { SpeakerInGroupKey } from "./actions/speaker-in-group-key";
+import { initGroupNames } from "./sonos/group-names";
 import { registerGracefulShutdown } from "./utils/graceful-shutdown";
 import { initPiBridge } from "./pi/bridge";
 import { startSocBus } from "./bus/soc-bus";
@@ -31,6 +33,8 @@ configureCoverCache({ resize: coverResizer(256) });
 
 // Register the actions that this plugin supports.
 initPiBridge();
+// Names given to sets of speakers ("Downstairs"), from the global settings
+initGroupNames();
 streamDeck.actions.registerAction(new PlayPauseKey());
 streamDeck.actions.registerAction(new VolumeDial());
 streamDeck.actions.registerAction(new PlaybackControlKey());
@@ -44,6 +48,7 @@ streamDeck.actions.registerAction(new DiagnosticsDial());
 streamDeck.actions.registerAction(new QueueDial());
 streamDeck.actions.registerAction(new MultiControlKey());
 streamDeck.actions.registerAction(new GroupSpeakersKey());
+streamDeck.actions.registerAction(new SpeakerInGroupKey());
 
 // Finally, connect to the Stream Deck immediately.
 streamDeck.connect();

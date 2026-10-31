@@ -10,7 +10,9 @@ import streamDeck, {
 import { mdiCog, mdiSpeakerMultiple } from "@mdi/js";
 import { KEY_ICON, KEY_TIERS, keyActiveFrame, keyActivePlate, keyCaption, keyIcon, keyLoadingGlyph, keyStatusBadge, keySvg } from "@rocklobster42195/streamdeck-kit";
 import type { SonosDevice } from "@svrooij/sonos";
-import { discoveryPromise, safeDevices } from "../sonos/sonos-discovery";
+import { onGroupNamesChanged, signatureOf } from "../sonos/group-names";
+import { deviceByHost, headOf, joinGroupOf, leaveGroup, saveGroupName } from "../sonos/grouping";
+import { discoveryPromise } from "../sonos/sonos-discovery";
 import { ACCENT_COLOR } from "../utils/icons";
 import { piT } from "../utils/pi-i18n";
 
@@ -21,14 +23,17 @@ type GroupSpeakersSettings = {
     memberIps?: string[];
     // { host: room name } for members that are offline right now (the multi-select's label-setting)
     memberNames?: Record<string, string>;
+    // A name for this set of speakers, shown wherever exactly this group plays (see group-names.ts)
+    groupName?: string;
+    // The set the name was last saved for, so changing the speakers moves the name (written by the key)
+    nameSignature?: string;
 };
 
 type KeyState = { action: KeyAction<GroupSpeakersSettings>; settings: GroupSpeakersSettings; busy: boolean; failedUntil: number };
 
 // Sonos groups only exist while speakers are joined; they can't be saved and played to later.
-// This key forms one on demand — the members join the leader with `x-rincon:<leader uuid>`, the
-// standard way Sonos joins a speaker to a group — and splits it again on the next press. Played to
-// separately, two speakers are two unsynced streams; joined, the leader feeds them in sync.
+// This key forms one on demand and splits it again on the next press. Played to separately, two
+// speakers are two unsynced streams; joined, the leader feeds them in sync.
 @action({ UUID: "de.boriskemper.sonos-controller.group-speakers-key" })
 export class GroupSpeakersKey extends SingletonAction<GroupSpeakersSettings> {
     private readonly keys = new Map<string, KeyState>();
@@ -37,18 +42,25 @@ export class GroupSpeakersKey extends SingletonAction<GroupSpeakersSettings> {
     private poll?: NodeJS.Timeout;
     private readonly lastImage = new Map<string, string>();
 
+    constructor() {
+        super();
+        onGroupNamesChanged(() => this.renderAll());
+    }
+
     override async onWillAppear(ev: WillAppearEvent<GroupSpeakersSettings>): Promise<void> {
         if (!ev.action.isKey()) return;
         this.keys.set(ev.action.id, { action: ev.action, settings: ev.payload.settings, busy: false, failedUntil: 0 });
         this.poll ??= setInterval(() => this.renderAll(), POLL_MS);
         await discoveryPromise;
+        await this.syncName(ev.action.id);
         this.render(ev.action.id);
     }
 
-    override onDidReceiveSettings(ev: DidReceiveSettingsEvent<GroupSpeakersSettings>): void {
+    override async onDidReceiveSettings(ev: DidReceiveSettingsEvent<GroupSpeakersSettings>): Promise<void> {
         const key = this.keys.get(ev.action.id);
         if (!key) return;
         key.settings = ev.payload.settings;
+        await this.syncName(ev.action.id);
         this.render(ev.action.id);
     }
 
@@ -73,8 +85,14 @@ export class GroupSpeakersKey extends SingletonAction<GroupSpeakersSettings> {
         key.busy = true;
         this.render(ev.action.id);
         try {
-            if (g.grouped) await ungroup(g.members);
-            else await group(g.leader, g.members);
+            if (g.grouped) {
+                // Only the members leave; the leader keeps playing
+                for (const m of g.members) await leaveGroup(m);
+            } else {
+                // The leader leaves any other group first, so the members join it and not what it was part of
+                if (headOf(g.leader) !== g.leader.Host) await leaveGroup(g.leader);
+                for (const m of g.members) await joinGroupOf(m, g.leader);
+            }
             streamDeck.logger.info(`[GroupSpeakers] ${g.grouped ? "ungrouped" : "grouped"} ${g.members.map((m) => m.Name).join(", ")} ${g.grouped ? "from" : "with"} ${g.leader.Name}`);
         } catch (e) {
             streamDeck.logger.error(`[GroupSpeakers] ${g.grouped ? "ungroup" : "group"} failed:`, e);
@@ -83,6 +101,28 @@ export class GroupSpeakersKey extends SingletonAction<GroupSpeakersSettings> {
             key.busy = false;
             this.render(ev.action.id);
         }
+    }
+
+    /**
+     * Saves the key's name for its set of speakers (lead + members), moving it when the set
+     * changed. Needs every speaker discovered (the name is keyed by their UUIDs); otherwise the
+     * previous name stays until they are.
+     */
+    private async syncName(id: string): Promise<void> {
+        const key = this.keys.get(id);
+        if (!key) return;
+        const s = key.settings;
+        const hosts = [s.deviceIp, ...(s.memberIps ?? [])].filter((h): h is string => !!h);
+        const devices = hosts.map((h) => deviceByHost(h));
+        if (hosts.length < 2 || devices.some((d) => !d)) return;
+        const signature = signatureOf(devices.map((d) => d!.Uuid));
+        const name = s.groupName?.trim() || undefined;
+        // Also when nothing changed here: the global map may have lost the name (another computer, a reset)
+        await saveGroupName(signature, name, s.nameSignature);
+        const nameSignature = name ? signature : undefined;
+        if (nameSignature === s.nameSignature) return;
+        key.settings = { ...s, nameSignature };
+        await key.action.setSettings(key.settings);
     }
 
     private renderAll(): void {
@@ -94,7 +134,7 @@ export class GroupSpeakersKey extends SingletonAction<GroupSpeakersSettings> {
         const key = this.keys.get(id);
         if (!key) return;
         const g = resolve(key.settings);
-        const caption = captionOf(key.settings, g);
+        const caption = key.settings.groupName?.trim() || captionOf(key.settings, g);
         const parts: string[] = [];
         if (!key.settings.deviceIp || !key.settings.memberIps?.length) {
             parts.push(keyIcon(mdiCog, KEY_ICON.withCaption, KEY_TIERS.unavailable), keyCaption(piT("Config..."), KEY_TIERS.unavailable));
@@ -120,35 +160,16 @@ const FAILED_MS = 4000;
 
 /** The configured speakers as discovered right now, and whether they currently play as one group. */
 function resolve(s: GroupSpeakersSettings): { leader?: SonosDevice; members: SonosDevice[]; grouped: boolean } {
-    const devices = safeDevices();
-    const leader = devices.find((d) => d.Host === s.deviceIp);
+    const leader = deviceByHost(s.deviceIp);
     const members = (s.memberIps ?? [])
         .filter((ip) => ip !== s.deviceIp)
-        .map((ip) => devices.find((d) => d.Host === ip))
+        .map((ip) => deviceByHost(ip))
         .filter((d): d is SonosDevice => !!d);
     // In one group when every member follows the same coordinator as the leader (the leader may
     // itself have been joined to someone else in the Sonos app — that still counts as together)
-    const head = leader ? (leader.Coordinator ?? leader).Host : undefined;
-    const grouped = !!head && members.length > 0 && members.every((m) => (m.Coordinator ?? m).Host === head);
+    const head = leader ? headOf(leader) : undefined;
+    const grouped = !!head && members.length > 0 && members.every((m) => headOf(m) === head);
     return { leader, members, grouped };
-}
-
-/** The leader leaves any other group first, so the members join it and not whatever it was part of. */
-async function group(leader: SonosDevice, members: SonosDevice[]): Promise<void> {
-    if ((leader.Coordinator ?? leader).Host !== leader.Host) {
-        await leader.AVTransportService.BecomeCoordinatorOfStandaloneGroup({ InstanceID: 0 });
-    }
-    for (const m of members) {
-        await m.AVTransportService.SetAVTransportURI({ InstanceID: 0, CurrentURI: `x-rincon:${leader.Uuid}`, CurrentURIMetaData: "" });
-    }
-}
-
-/** Only the members leave; the leader keeps playing. */
-async function ungroup(members: SonosDevice[]): Promise<void> {
-    for (const m of members) {
-        if ((m.Coordinator ?? m).Host === m.Host) continue;
-        await m.AVTransportService.BecomeCoordinatorOfStandaloneGroup({ InstanceID: 0 });
-    }
 }
 
 /** "Den + Office PC": the leader first, then the members; stored names stand in for offline ones. */

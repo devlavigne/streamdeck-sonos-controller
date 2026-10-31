@@ -156,7 +156,7 @@ interface DiscoveryGlobalSettings {
 // setGlobalSettings replaces the whole payload, so a bare setGlobalSettings({ lastKnownDeviceIp })
 // would wipe householdId (and vice-versa). Every write goes through here: read current, merge the
 // patch, write back. `undefined` values in the patch delete that key.
-async function patchGlobalSettings(patch: Partial<DiscoveryGlobalSettings>): Promise<void> {
+export async function patchGlobalSettings(patch: Partial<DiscoveryGlobalSettings>): Promise<void> {
     let current: DiscoveryGlobalSettings = {};
     try {
         current = await streamDeck.settings.getGlobalSettings<DiscoveryGlobalSettings>();

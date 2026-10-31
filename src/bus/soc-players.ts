@@ -9,6 +9,7 @@ import type { SonosDeviceController } from "../sonos/SonosDeviceController";
 import { parsePlayMode, toPlayMode } from "../sonos/play-mode";
 import { isMusicAssistantStream, type TrackInfo } from "../sonos/SonosTypes";
 import { formatRelTime, parseRelTime } from "../sonos/rel-time";
+import { nameOf } from "../sonos/group-names";
 import type { SonosBatteryStatus } from "../sonos/SonosBattery";
 import { getAccentColor, knownCoverColor, setKnownCoverColor } from "../utils/color-extract";
 
@@ -291,10 +292,11 @@ export function setGroupMembers(fn: (coordinatorId: string) => string[]): void {
     publish();
 }
 
-/** "Küche", or "Küche + 2" for a group of three (bonded satellites don't count). */
+/** "Küche", or "Küche + 2" for a group of three (bonded satellites don't count), or the name the user gave that exact set. */
 function groupName(id: string, name: string): string {
-    const members = membersOf(id).length;
-    return members > 1 ? `${name} + ${members - 1}` : name;
+    const members = membersOf(id);
+    if (members.length <= 1) return name;
+    return nameOf(members) ?? `${name} + ${members.length - 1}`;
 }
 
 /** A watched controller in the group: the coordinator's own if we have it, else any member's. */

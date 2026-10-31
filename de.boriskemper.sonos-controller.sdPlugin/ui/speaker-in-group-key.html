@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Speaker in group key</title>
+  <link rel="stylesheet" href="pi-theme.css" />
+  <link rel="stylesheet" href="soc.css" />
+  <script src="locales.generated.js"></script>
+  <script src="pi.js"></script>
+</head>
+
+<body hidden>
+  <pi-section title="pi.speaker_this">
+    <pi-select setting="deviceIp" source="sonos-devices" with="device" placeholder="pi.choose_device"></pi-select>
+    <div class="pi-hint" data-i18n="pi.speaker_this_hint"></div>
+  </pi-section>
+  <pi-section title="pi.group_leader">
+    <pi-select setting="leadIp" source="sonos-devices" placeholder="pi.choose_device"></pi-select>
+    <div class="pi-hint" data-i18n="pi.speaker_lead_hint"></div>
+  </pi-section>
+  <div class="pi-footer"><span data-plugin-version></span></div>
+</body>
+
+</html>
